@@ -164,6 +164,20 @@ export function parseJsonArrayFromText(text: string): JsonValue[] | null {
 	return null;
 }
 
+// True when the final ")" closes a "(" earlier in the string. Scans left to
+// right so a stray ")" before a later "(...)" pair cannot cancel that pair.
+function hasMatchedTrailingParen(url: string): boolean {
+	let depth = 0;
+	for (let i = 0; i < url.length - 1; i++) {
+		if (url[i] === "(") {
+			depth++;
+		} else if (url[i] === ")" && depth > 0) {
+			depth--;
+		}
+	}
+	return depth > 0;
+}
+
 export function cleanUrl(url: string): string {
 	let clean = url;
 
@@ -189,10 +203,7 @@ export function cleanUrl(url: string): string {
 		);
 		// A trailing ")" is wrapping syntax only when it has no "(" to close:
 		// Wikipedia-style paths such as /wiki/Mercury_(planet) end in one.
-		if (
-			clean.endsWith(")") &&
-			clean.split(")").length > clean.split("(").length
-		) {
+		if (clean.endsWith(")") && !hasMatchedTrailingParen(clean)) {
 			clean = clean.slice(0, -1);
 		}
 	}
