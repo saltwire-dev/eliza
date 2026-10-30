@@ -181,7 +181,13 @@ function resolveNoteIndex(
       candidates.map(({ note }) => note),
     );
   }
-  const candidate = candidates[0];
+  // Identical copies resolve to the one distinctNotes shows: the copy edited
+  // last, so a lookup edit keeps the note the owner sees.
+  const candidate = candidates.reduce<(typeof candidates)[number] | undefined>(
+    (shown, next) =>
+      !shown || next.note.updatedAt > shown.note.updatedAt ? next : shown,
+    undefined,
+  );
   if (!candidate) {
     throw new ElizaError("Resolved sticky note was missing.", {
       code: "NOTES_NOTE_RESOLUTION_FAILED",
